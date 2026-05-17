@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 Earth Clicker - Civilization Builder</title>
+    <style>
+        :root {
+            --bg: #0a0a1a;
+            --panel: #111133;
+            --accent: #4da6ff;
+            --gold: #ffd700;
+            --text: #e0e0f0;
+            --text-dim: #9999bb;
+            --green: #4caf84;
+            --red: #e05555;
+            --card: #1a1a3a;
+            --card-hover: #222255;
+            --border: #2a2a55;
+            --glow: rgba(77, 166, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: default;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--dur) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 15px;
+            gap: 20px;
+            min-height: 100vh;
+            align-items: flex-start;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: sticky;
+            top: 15px;
+        }
+
+        .game-header {
+            text-align: center;
+            width: 100%;
+        }
+        .game-title {
+            font-size: 2.2em;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #4da6ff, #00e5ff, #4da6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2px;
+        }
+        .game-subtitle {
+            font-size: 0.85em;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            text-align: center;
+            min-width: 80px;
+            flex: 1;
+            transition: all 0.3s;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #fff;
+            transition: transform 0.15s;
+            display: inline-block;
+        }
+        .stat-value.pulse {
+            transform: scale(1.25);
+            color: var(--gold);
+        }
+        .stat-label {
+            font-size: 0.7em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-card.energy-card { border-color: #4da6ff55; box-shadow: 0 0 20px rgba(77,166,255,0.15); }
+        .stat-card.eps-card { border-color: #4caf8455; box-shadow: 0 0 20px rgba(76,175,132,0.15); }
+
+        .earth-wrapper {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.08s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .earth-wrapper:active { transform: scale(0.93); }
+        .earth-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(77,166,255,0.25) 0%, transparent 70%);
+            pointer-events: none;
+            animation: glowPulse 3s ease-in-out infinite;
+            z-index: 0;
+        }
+        @keyframes glowPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        }
+        .earth {
+            width: 250px; height: 250px;
+            border-radius: 50%;
+            position: relative; z-index: 1;
+            cursor: pointer;
+            background:
+                radial-gradient(circle at 28% 38%, #5aad4e 4%, #4a9e3f 7%, transparent 7.5%),
+                radial-gradient(circle at 48% 52%, #3d8b37 8%, #2d7b27 14%, transparent 14.5%),
+                radial-gradient(circle at 62% 33%, #6abe5a 3%, #5aad4e 6%, transparent 6.5%),
+                radial-gradient(circle at 38% 62%, #4a9e3f 7%, #3d8b37 11%, transparent 11.5%),
+                radial-gradient(circle at 55% 28%, #5aad4e 5%, #4a9e3f 8%, transparent 8.5%),
+                radial-gradient(circle at 68% 48%, #3d8b37 6%, #2d7b27 10%, transparent 10.5%),
+                radial-gradient(circle at 22% 48%, #4a9e3f 9%, #3d8b37 13%, transparent 13.5%),
+                radial-gradient(circle at 42% 70%, #5aad4e 5%, #4a9e3f 8%, transparent 8.5%),
+                radial-gradient(circle at 72% 55%, #6abe5a 3%, transparent 3.5%),
+                radial-gradient(circle at 18% 60%, #3d8b37 5%, transparent 5.5%),
+                radial-gradient(circle at 50% 50%, #1a75c4 0%, #0f5da0 40%, #0a4a80 70%, #06355e 100%);
+            box-shadow: 0 0 50px rgba(30,130,230,0.5), 0 0 100px rgba(20,100,200,0.3), 0 0 180px rgba(15,80,180,0.2),
+                inset 0 -25px 50px rgba(0,0,0,0.4), inset -25px 0 50px rgba(0,0,0,0.25),
+                inset 25px 0 50px rgba(255,255,255,0.04), inset 0 15px 30px rgba(255,255,255,0.06);
+            animation: earthSpin 40s linear infinite;
+            transition: box-shadow 0.3s;
+        }
+        .earth-wrapper:hover .earth {
+            box-shadow: 0 0 70px rgba(50,160,255,0.7), 0 0 130px rgba(30,120,220,0.45), 0 0 200px rgba(20,100,200,0.3),
+                inset 0 -25px 50px rgba(0,0,0,0.4), inset -25px 0 50px rgba(0,0,0,0.25),
+                inset 25px 0 50px rgba(255,255,255,0.06), inset 0 15px 30px rgba(255,255,255,0.08);
+        }
+        .earth::after {
+            content: '';
+            position: absolute; top: 18%; left: 22%;
+            width: 55px; height: 35px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(-25deg);
+            pointer-events: none;
+            filter: blur(8px);
+        }
+        @keyframes earthSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .click-hint {
+            position: absolute; bottom: -30px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em; color: var(--text-dim);
+            z-index: 2; pointer-events: none;
+            animation: hintBounce 2s ease-in-out infinite;
+            white-space: nowrap; letter-spacing: 1px;
+        }
+        @keyframes hintBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        .floating-text {
+            position: absolute; pointer-events: none; z-index: 10;
+            font-weight: 900; font-size: 1.3em; color: #fff;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+            white-space: nowrap;
+        }
+        .floating-text.critical {
+            color: #ffd700; font-size: 2em;
+            text-shadow: 0 0 20px rgba(255,215,0,1), 0 0 40px rgba(255,180,0,0.7);
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            30% { opacity: 1; transform: translateY(-40px) scale(1.3); }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.7); }
+        }
+
+        .particle {
+            position: absolute; pointer-events: none; z-index: 5;
+            border-radius: 50%;
+            animation: particleBurst 0.7s ease-out forwards;
+        }
+        @keyframes particleBurst {
+            0% { opacity: 1; transform: translate(0,0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+        }
+
+        .earth-wrapper.golden .earth {
+            box-shadow: 0 0 80px rgba(255,200,30,0.9), 0 0 160px rgba(255,170,20,0.6),
+                0 0 240px rgba(255,150,10,0.4), 0 0 350px rgba(255,130,0,0.3),
+                inset 0 -25px 50px rgba(0,0,0,0.4), inset -25px 0 50px rgba(0,0,0,0.25),
+                inset 25px 0 50px rgba(255,255,255,0.06);
+            animation: earthSpin 40s linear infinite, goldenShimmer 0.5s ease-in-out infinite;
+        }
+        @keyframes goldenShimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.4) saturate(1.5); }
+        }
+        .golden-timer {
+            position: absolute; top: -35px; left: 50%;
+            transform: translateX(-50%);
+            background: #ff8c00; color: #fff;
+            padding: 4px 14px; border-radius: 20px;
+            font-weight: 700; font-size: 0.85em;
+            z-index: 3; pointer-events: none;
+            animation: goldenPulse 0.5s ease-in-out infinite;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        @keyframes goldenPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255,140,0,0.6); }
+            50% { box-shadow: 0 0 30px rgba(255,140,0,1); }
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 340px;
+            max-width: 550px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .shop-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .shop-tab {
+            padding: 10px 16px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .shop-tab.active {
+            background: var(--panel);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 -3px 15px rgba(77,166,255,0.2);
+        }
+        .shop-tab:hover:not(.active) { color: #fff; background: #1e1e44; }
+
+        .shop-content {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 0 12px 12px 12px;
+            padding: 15px;
+            max-height: 65vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-behavior: smooth;
+        }
+        .shop-content::-webkit-scrollbar { width: 6px; }
+        .shop-content::-webkit-scrollbar-track { background: transparent; }
+        .shop-content::-webkit-scrollbar-thumb { background: #333366; border-radius: 3px; }
+
+        /* Improved shop item layout */
+        .shop-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: visible; /* ensure no clipping */
+        }
+        .shop-item:hover {
+            background: var(--card-hover);
+            border-color: #444488;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .shop-item.affordable { border-color: #4caf8455; box-shadow: 0 0 15px rgba(76,175,132,0.1); }
+        .shop-item.affordable:hover { border-color: #4caf84; box-shadow: 0 0 25px rgba(76,175,132,0.25); }
+        .shop-item.locked {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(30%);
+        }
+        .shop-item.locked:hover { background: var(--card); border-color: var(--border); box-shadow: none; }
+
+        .shop-icon {
+            font-size: 2em;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .shop-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .shop-name {
+            font-weight: 700;
+            font-size: 0.95em;
+            color: #fff;
+            line-height: 1.3;
+        }
+        .shop-desc {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+        .shop-owned {
+            font-size: 0.7em;
+            color: #888;
+            margin-top: 1px;
+            line-height: 1.3;
+        }
+        .shop-cost {
+            font-weight: 700;
+            font-size: 0.85em;
+            white-space: nowrap;
+            text-align: right;
+            color: #ffcc66;
+            margin-bottom: 4px;
+        }
+        .shop-cost.affordable-cost { color: #4caf84; }
+        .shop-buy-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 58px;
+            text-align: center;
+            display: inline-block;
+        }
+        .shop-buy-btn:hover {
+            background: #5db8ff;
+            box-shadow: 0 4px 15px rgba(77,166,255,0.4);
+            transform: translateY(-1px);
+        }
+        .shop-buy-btn:active { transform: scale(0.94); }
+        .shop-buy-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            color: #888;
+        }
+
+        .mult-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.65em;
+            font-weight: 700;
+            margin-left: 6px;
+            animation: badgeGlow 2s ease-in-out infinite;
+        }
+        @keyframes badgeGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(255,107,107,0.5); }
+            50% { box-shadow: 0 0 18px rgba(255,107,107,0.9); }
+        }
+
+        .bottom-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #222255; border-color: #555; box-shadow: 0 3px 12px rgba(0,0,0,0.3); }
+        .btn.save-btn { border-color: #4caf84; color: #4caf84; }
+        .btn.save-btn:hover { background: #1a3a2a; box-shadow: 0 3px 15px rgba(76,175,132,0.3); }
+        .btn.reset-btn { border-color: #e05555; color: #e05555; }
+        .btn.reset-btn:hover { background: #3a1a1a; box-shadow: 0 3px 15px rgba(224,85,85,0.3); }
+        .auto-save-indicator {
+            font-size: 0.7em;
+            color: #4caf84;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .auto-save-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #4caf84;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes dotPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: #222244;
+            border: 1px solid #4caf84;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            z-index: 100;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            animation: toastIn 0.4s ease-out, toastOut 0.4s 2.5s ease-in forwards;
+            pointer-events: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            white-space: nowrap;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 850px) {
+            .game-container { flex-direction: column; align-items: center; padding: 10px; gap: 12px; }
+            .left-panel { position: static; min-width: auto; width: 100%; }
+            .right-panel { max-width: 100%; width: 100%; min-width: auto; }
+            .earth { width: 180px; height: 180px; }
+            .earth-glow { width: 200px; height: 200px; }
+            .game-title { font-size: 1.6em; }
+            .shop-content { max-height: 45vh; }
+            .stats-bar { gap: 6px; }
+            .stat-card { padding: 8px 10px; min-width: 60px; }
+            .stat-value { font-size: 1.2em; }
+            .shop-item { padding: 10px; gap: 8px; }
+            .shop-icon { font-size: 1.6em; width: 40px; height: 40px; }
+            .shop-buy-btn { padding: 6px 12px; font-size: 0.75em; min-width: 50px; }
+        }
+        @media (max-width: 400px) {
+            .earth { width: 140px; height: 140px; }
+            .earth-glow { width: 155px; height: 155px; }
+            .shop-tab { padding: 7px 10px; font-size: 0.7em; }
+            .shop-icon { font-size: 1.4em; width: 36px; height: 36px; }
+            .shop-buy-btn { padding: 6px 10px; font-size: 0.7em; min-width: 48px; }
+            .shop-name { font-size: 0.85em; }
+            .shop-cost { font-size: 0.75em; }
+            .shop-item { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+    <div id="toastContainer"></div>
+
+    <div class="game-container">
+        <div class="left-panel">
+            <div class="game-header">
+                <div class="game-title">🌍 EARTH CLICKER</div>
+                <div class="game-subtitle">Build Your Civilization</div>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-card energy-card">
+                    <div class="stat-value" id="energyDisplay">0</div>
+                    <div class="stat-label">⚡ Energy</div>
+                </div>
+                <div class="stat-card eps-card">
+                    <div class="stat-value" id="epsDisplay">0</div>
+                    <div class="stat-label">📈 Per Second</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="clicksDisplay">0</div>
+                    <div class="stat-label">👆 Clicks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="multDisplay">1x</div>
+                    <div class="stat-label">🔮 Multiplier</div>
+                </div>
+            </div>
+
+            <div class="earth-wrapper" id="earthWrapper">
+                <div class="earth-glow"></div>
+                <div class="earth" id="earth"></div>
+                <div class="click-hint">👆 CLICK THE EARTH!</div>
+            </div>
+
+            <div class="bottom-bar">
+                <button class="btn save-btn" onclick="saveGame()">💾 Save</button>
+                <button class="btn" onclick="loadGame()">📂 Load</button>
+                <button class="btn reset-btn" onclick="resetGame()">🗑️ Reset</button>
+                <span class="auto-save-indicator"><span class="auto-save-dot"></span> Auto-save</span>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="shop-tabs">
+                <div class="shop-tab active" data-tab="generators" onclick="switchTab('generators')">🏭 Generators</div>
+                <div class="shop-tab" data-tab="clicks" onclick="switchTab('clicks')">🔨 Click Power</div>
+                <div class="shop-tab" data-tab="multipliers" onclick="switchTab('multipliers')">✨ Multipliers</div>
+                <div class="shop-tab" data-tab="special" onclick="switchTab('special')">🎯 Special</div>
+            </div>
+            <div class="shop-content" id="shopContent"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Starfield
+            const starfield = document.getElementById('starfield');
+            for (let i = 0; i < 120; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2.5 + 0.5;
+                star.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; top:${Math.random()*100}%; --dur:${Math.random()*3+2}s; --delay:${Math.random()*4}s; opacity:${Math.random()*0.6+0.2};`;
+                starfield.appendChild(star);
+            }
+
+            const game = {
+                energy: 0,
+                totalEnergyEver: 0,
+                totalClicks: 0,
+                generators: {},
+                clickUpgrades: {},
+                multipliers: {},
+                specialUpgrades: {},
+                critChance: 0,
+                critMultiplier: 5,
+                goldenEarthActive: false,
+                goldenEarthEndTime: 0,
+                lastSaveTime: Date.now(),
+                totalEarnedOffline: 0,
+            };
+
+            const generatorData = [
+                { id: 'solar', name: 'Solar Panel', icon: '☀️', baseCost: 10, production: 0.5, desc: 'Harness the sun. +0.5/sec each' },
+                { id: 'wind', name: 'Wind Turbine', icon: '💨', baseCost: 60, production: 2, desc: 'Capture the breeze. +2/sec each' },
+                { id: 'hydro', name: 'Hydroelectric Dam', icon: '🌊', baseCost: 350, production: 10, desc: 'Power of water. +10/sec each' },
+                { id: 'geo', name: 'Geothermal Plant', icon: '🌋', baseCost: 1800, production: 50, desc: 'Earth\'s core heat. +50/sec each' },
+                { id: 'nuclear', name: 'Nuclear Reactor', icon: '⚛️', baseCost: 10000, production: 280, desc: 'Atomic power. +280/sec each' },
+                { id: 'fusion', name: 'Fusion Reactor', icon: '💥', baseCost: 55000, production: 1500, desc: 'Star-like fusion. +1,500/sec each' },
+                { id: 'dyson', name: 'Dyson Swarm', icon: '🛰️', baseCost: 300000, production: 8000, desc: 'Orbital collectors. +8,000/sec each' },
+                { id: 'blackhole', name: 'Black Hole Generator', icon: '🕳️', baseCost: 1800000, production: 45000, desc: 'Hawking radiation. +45,000/sec each' },
+                { id: 'darkenergy', name: 'Dark Energy Harvester', icon: '🌌', baseCost: 10000000, production: 250000, desc: 'Cosmic expansion. +250K/sec each' },
+                { id: 'universe', name: 'Universe Engine', icon: '🔮', baseCost: 60000000, production: 1500000, desc: 'Reality bending. +1.5M/sec each' },
+            ];
+
+            const clickUpgradeData = [
+                { id: 'betterTools', name: 'Better Tools', icon: '🔧', baseCost: 20, clickBonus: 1, desc: '+1 per click' },
+                { id: 'advancedTools', name: 'Advanced Tools', icon: '🛠️', baseCost: 120, clickBonus: 3, desc: '+3 per click' },
+                { id: 'industrial', name: 'Industrial Machinery', icon: '🏭', baseCost: 600, clickBonus: 10, desc: '+10 per click' },
+                { id: 'laser', name: 'Laser Technology', icon: '🔬', baseCost: 3000, clickBonus: 40, desc: '+40 per click' },
+                { id: 'quantum', name: 'Quantum Tools', icon: '💎', baseCost: 15000, clickBonus: 160, desc: '+160 per click' },
+                { id: 'nano', name: 'Nano Technology', icon: '🧬', baseCost: 80000, clickBonus: 650, desc: '+650 per click' },
+                { id: 'reality', name: 'Reality Bending', icon: '🌀', baseCost: 450000, clickBonus: 2800, desc: '+2,800 per click' },
+                { id: 'divine', name: 'Divine Power', icon: '👑', baseCost: 2500000, clickBonus: 12000, desc: '+12,000 per click' },
+                { id: 'cosmic', name: 'Cosmic Force', icon: '🌟', baseCost: 15000000, clickBonus: 55000, desc: '+55,000 per click' },
+            ];
+
+            const multiplierData = [
+                { id: 'eff1', name: 'Efficiency I', icon: '📊', cost: 150, multiplier: 2, desc: 'Double all production', oneTime: true },
+                { id: 'eff2', name: 'Efficiency II', icon: '📈', cost: 3000, multiplier: 2, desc: 'Double all production again', oneTime: true },
+                { id: 'eff3', name: 'Efficiency III', icon: '🚀', cost: 60000, multiplier: 3, desc: 'Triple all production', oneTime: true },
+                { id: 'eff4', name: 'Efficiency IV', icon: '💫', cost: 1200000, multiplier: 4, desc: 'Quadruple all production', oneTime: true },
+                { id: 'eff5', name: 'Efficiency V', icon: '🔥', cost: 30000000, multiplier: 5, desc: 'Quintuple all production', oneTime: true },
+            ];
+
+            const specialData = [
+                { id: 'crit1', name: 'Critical Discovery', icon: '🎯', cost: 600, effect: 'critChance5', desc: '5% chance for 5x click', oneTime: true },
+                { id: 'crit2', name: 'Enhanced Criticals', icon: '💢', cost: 8000, effect: 'critChance10', desc: '+5% crit chance (total 10%)', oneTime: true, requires: 'crit1' },
+                { id: 'crit3', name: 'Precision Strike', icon: '🎪', cost: 100000, effect: 'critChance20', desc: '+10% crit chance (total 20%)', oneTime: true, requires: 'crit2' },
+                { id: 'critBoost', name: 'Critical Mastery', icon: '💥', cost: 800000, effect: 'critMult10', desc: 'Criticals are 10x instead of 5x', oneTime: true, requires: 'crit1' },
+                { id: 'goldenLuck', name: 'Golden Luck', icon: '🍀', cost: 5000, effect: 'goldenMore', desc: 'Golden Earth appears more often', oneTime: true },
+                { id: 'goldenBoost', name: 'Golden Amplifier', icon: '✨', cost: 50000, effect: 'goldenBoost', desc: 'Golden Earth gives 100x (was 50x)', oneTime: true, requires: 'goldenLuck' },
+                { id: 'clickFrenzy', name: 'Click Frenzy', icon: '⚡', cost: 200000, effect: 'clickFrenzy', desc: '10% chance clicks give 5x', oneTime: true },
+            ];
+
+            generatorData.forEach(g => game.generators[g.id] = 0);
+            clickUpgradeData.forEach(c => game.clickUpgrades[c.id] = 0);
+            multiplierData.forEach(m => game.multipliers[m.id] = false);
+            specialData.forEach(s => game.specialUpgrades[s.id] = false);
+
+            function formatNumber(n) {
+                if (n === Infinity) return '∞';
+                if (n === -Infinity) return '-∞';
+                if (isNaN(n)) return '0';
+                if (n < 0) return '-' + formatNumber(-n);
+                if (n < 1000) return Math.floor(n).toString();
+                const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+                let tier = Math.floor(Math.log10(n) / 3);
+                if (tier >= suffixes.length) tier = suffixes.length - 1;
+                const suffix = suffixes[tier];
+                const scale = Math.pow(10, tier * 3);
+                const scaled = n / scale;
+                return scaled.toFixed(scaled < 10 ? 2 : scaled < 100 ? 1 : 0) + suffix;
+            }
+
+            function getGeneratorCost(id) {
+                const data = generatorData.find(g => g.id === id);
+                return Math.floor(data.baseCost * Math.pow(1.15, game.generators[id]));
+            }
+            function getClickUpgradeCost(id) {
+                const data = clickUpgradeData.find(c => c.id === id);
+                return Math.floor(data.baseCost * Math.pow(1.18, game.clickUpgrades[id]));
+            }
+            function getGlobalMultiplier() {
+                let mult = 1;
+                if (game.multipliers['eff1']) mult *= 2;
+                if (game.multipliers['eff2']) mult *= 2;
+                if (game.multipliers['eff3']) mult *= 3;
+                if (game.multipliers['eff4']) mult *= 4;
+                if (game.multipliers['eff5']) mult *= 5;
+                return mult;
+            }
+            function getEnergyPerSecond() {
+                let total = 0;
+                generatorData.forEach(g => total += g.production * game.generators[g.id]);
+                return total * getGlobalMultiplier();
+            }
+            function getClickValue() {
+                let base = 1;
+                clickUpgradeData.forEach(c => base += c.clickBonus * game.clickUpgrades[c.id]);
+                let value = base * getGlobalMultiplier();
+                if (game.specialUpgrades['clickFrenzy'] && Math.random() < 0.1) value *= 5;
+                return value;
+            }
+            function getCritChance() { return Math.min(game.critChance, 80); }
+            function getCritMultiplier() { return game.critMultiplier; }
+            function getGoldenClickMultiplier() {
+                let base = 50;
+                if (game.specialUpgrades['goldenBoost']) base = 100;
+                return base;
+            }
+
+            let currentTab = 'generators';
+            function switchTab(tab) {
+                currentTab = tab;
+                document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+                document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+                renderShop();
+            }
+
+            function renderShop() {
+                const container = document.getElementById('shopContent');
+                let html = '';
+                if (currentTab === 'generators') {
+                    generatorData.forEach(g => {
+                        const owned = game.generators[g.id];
+                        const cost = getGeneratorCost(g.id);
+                        const affordable = game.energy >= cost;
+                        html += `
+                        <div class="shop-item ${affordable ? 'affordable' : ''}" onclick="buyGenerator('${g.id}')">
+                            <div class="shop-icon">${g.icon}</div>
+                            <div class="shop-info">
+                                <div class="shop-name">${g.name}</div>
+                                <div class="shop-desc">${g.desc}</div>
+                                <div class="shop-owned">Owned: <strong>${owned}</strong> | Producing: <strong>${formatNumber(g.production * owned)}/sec</strong></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; gap:4px;">
+                                <div class="shop-cost ${affordable ? 'affordable-cost' : ''}">⚡ ${formatNumber(cost)}</div>
+                                <button class="shop-buy-btn" ${!affordable ? 'disabled' : ''}>Buy</button>
+                            </div>
+                        </div>`;
+                    });
+                } else if (currentTab === 'clicks') {
+                    clickUpgradeData.forEach(c => {
+                        const owned = game.clickUpgrades[c.id];
+                        const cost = getClickUpgradeCost(c.id);
+                        const affordable = game.energy >= cost;
+                        html += `
+                        <div class="shop-item ${affordable ? 'affordable' : ''}" onclick="buyClickUpgrade('${c.id}')">
+                            <div class="shop-icon">${c.icon}</div>
+                            <div class="shop-info">
+                                <div class="shop-name">${c.name}</div>
+                                <div class="shop-desc">${c.desc} (Total from this: +${c.clickBonus * owned})</div>
+                                <div class="shop-owned">Owned: <strong>${owned}</strong></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; gap:4px;">
+                                <div class="shop-cost ${affordable ? 'affordable-cost' : ''}">⚡ ${formatNumber(cost)}</div>
+                                <button class="shop-buy-btn" ${!affordable ? 'disabled' : ''}>Buy</button>
+                            </div>
+                        </div>`;
+                    });
+                } else if (currentTab === 'multipliers') {
+                    multiplierData.forEach(m => {
+                        const purchased = game.multipliers[m.id];
+                        const affordable = game.energy >= m.cost && !purchased;
+                        html += `
+                        <div class="shop-item ${purchased ? 'locked' : (affordable ? 'affordable' : '')}" 
+                             onclick="${purchased ? '' : `buyMultiplier('${m.id}')`}"
+                             style="${purchased ? 'cursor:not-allowed;' : ''}">
+                            <div class="shop-icon">${m.icon}</div>
+                            <div class="shop-info">
+                                <div class="shop-name">${m.name} ${purchased ? '<span style="color:#4caf84;">✅ Owned</span>' : ''}</div>
+                                <div class="shop-desc">${m.desc} (${m.multiplier}x)</div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; gap:4px;">
+                                ${purchased ? '<div style="color:#4caf84; font-weight:700;">OWNED</div>' :
+                                `<div class="shop-cost ${affordable ? 'affordable-cost' : ''}">⚡ ${formatNumber(m.cost)}</div>
+                                 <button class="shop-buy-btn" ${!affordable ? 'disabled' : ''}>Buy</button>`}
+                            </div>
+                        </div>`;
+                    });
+                } else if (currentTab === 'special') {
+                    specialData.forEach(s => {
+                        const purchased = game.specialUpgrades[s.id];
+                        const affordable = game.energy >= s.cost && !purchased;
+                        let canBuy = !purchased;
+                        if (s.requires && !game.specialUpgrades[s.requires]) canBuy = false;
+                        const locked = !canBuy && !purchased;
+                        html += `
+                        <div class="shop-item ${purchased ? 'locked' : (affordable && canBuy ? 'affordable' : '')} ${locked ? 'locked' : ''}" 
+                             onclick="${canBuy && affordable ? `buySpecial('${s.id}')` : ''}"
+                             style="${(purchased || locked) ? 'cursor:not-allowed;' : ''}">
+                            <div class="shop-icon">${s.icon}</div>
+                            <div class="shop-info">
+                                <div class="shop-name">${s.name} ${purchased ? '<span style="color:#4caf84;">✅ Owned</span>' : (locked ? '<span style="color:#e05555;">🔒 Locked</span>' : '')}</div>
+                                <div class="shop-desc">${s.desc}${s.requires && !purchased ? ` (Requires: ${specialData.find(sp=>sp.id===s.requires)?.name || s.requires})` : ''}</div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; gap:4px;">
+                                ${purchased ? '<div style="color:#4caf84; font-weight:700;">OWNED</div>' :
+                                (locked ? '<div style="color:#e05555;">LOCKED</div>' :
+                                `<div class="shop-cost ${affordable ? 'affordable-cost' : ''}">⚡ ${formatNumber(s.cost)}</div>
+                                 <button class="shop-buy-btn" ${!affordable ? 'disabled' : ''}>Buy</button>`)}
+                            </div>
+                        </div>`;
+                    });
+                }
+                container.innerHTML = html;
+            }
+
+            function updateAllDisplays() {
+                const eps = getEnergyPerSecond();
+                document.getElementById('energyDisplay').textContent = formatNumber(game.energy);
+                document.getElementById('epsDisplay').textContent = formatNumber(eps);
+                document.getElementById('clicksDisplay').textContent = formatNumber(game.totalClicks);
+                document.getElementById('multDisplay').textContent = getGlobalMultiplier() + 'x';
+            }
+
+            function pulseElement(id) {
+                const el = document.getElementById(id);
+                el.classList.add('pulse');
+                setTimeout(() => el.classList.remove('pulse'), 200);
+            }
+
+            window.buyGenerator = function(id) {
+                const cost = getGeneratorCost(id);
+                if (game.energy >= cost) {
+                    game.energy -= cost;
+                    game.generators[id]++;
+                    game.totalEnergyEver += cost;
+                    pulseElement('energyDisplay');
+                    renderShop();
+                    updateAllDisplays();
+                    if (game.generators[id] === 1) {
+                        const gData = generatorData.find(g => g.id === id);
+                        showToast(`🌟 First ${gData.name} purchased!`);
+                    }
+                }
+            };
+            window.buyClickUpgrade = function(id) {
+                const cost = getClickUpgradeCost(id);
+                if (game.energy >= cost) {
+                    game.energy -= cost;
+                    game.clickUpgrades[id]++;
+                    game.totalEnergyEver += cost;
+                    pulseElement('energyDisplay');
+                    renderShop();
+                    updateAllDisplays();
+                    if (game.clickUpgrades[id] === 1) {
+                        const cData = clickUpgradeData.find(c => c.id === id);
+                        showToast(`🔨 ${cData.name} unlocked!`);
+                    }
+                }
+            };
+            window.buyMultiplier = function(id) {
+                const mData = multiplierData.find(m => m.id === id);
+                if (game.energy >= mData.cost && !game.multipliers[id]) {
+                    game.energy -= mData.cost;
+                    game.multipliers[id] = true;
+                    game.totalEnergyEver += mData.cost;
+                    pulseElement('energyDisplay');
+                    renderShop();
+                    updateAllDisplays();
+                    showToast(`✨ ${mData.name} activated! ${mData.multiplier}x boost!`);
+                }
+            };
+            window.buySpecial = function(id) {
+                const sData = specialData.find(s => s.id === id);
+                if (game.energy >= sData.cost && !game.specialUpgrades[id]) {
+                    if (sData.requires && !game.specialUpgrades[sData.requires]) return;
+                    game.energy -= sData.cost;
+                    game.specialUpgrades[id] = true;
+                    game.totalEnergyEver += sData.cost;
+                    applySpecialEffect(id);
+                    pulseElement('energyDisplay');
+                    renderShop();
+                    updateAllDisplays();
+                    showToast(`🎯 ${sData.name} acquired!`);
+                }
+            };
+            function applySpecialEffect(id) {
+                switch (id) {
+                    case 'crit1': game.critChance = 5; break;
+                    case 'crit2': game.critChance = 10; break;
+                    case 'crit3': game.critChance = 20; break;
+                    case 'critBoost': game.critMultiplier = 10; break;
+                    case 'clickFrenzy': break;
+                }
+            }
+
+            const earthWrapper = document.getElementById('earthWrapper');
+            const earth = document.getElementById('earth');
+            earthWrapper.addEventListener('click', function(e) {
+                if (e.target.closest('.shop-buy-btn') || e.target.closest('.shop-item') || e.target.closest('button')) return;
+                let clickVal = getClickValue();
+                let isCrit = false;
+                let isGolden = game.goldenEarthActive;
+                if (Math.random() * 100 < getCritChance()) { clickVal *= getCritMultiplier(); isCrit = true; }
+                if (isGolden) clickVal *= getGoldenClickMultiplier();
+                game.energy += clickVal;
+                game.totalEnergyEver += clickVal;
+                game.totalClicks++;
+                pulseElement('energyDisplay');
+                pulseElement('clicksDisplay');
+                const rect = earth.getBoundingClientRect();
+                const cx = rect.left + rect.width/2 + (Math.random()-0.5)*80;
+                const cy = rect.top + rect.height/2 + (Math.random()-0.5)*60;
+                createFloatingText(cx, cy, '+' + formatNumber(clickVal), isCrit, isGolden);
+                const earthCenterX = rect.left + rect.width/2;
+                const earthCenterY = rect.top + rect.height/2;
+                createParticles(e.clientX, e.clientY, earthCenterX, earthCenterY, isCrit || isGolden);
+                updateAllDisplays();
+                renderShop();
+            });
+            earthWrapper.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.shop-buy-btn') || e.target.closest('.shop-item') || e.target.closest('button')) return;
+                e.preventDefault();
+                earthWrapper.click();
+            }, { passive: false });
+
+            function createFloatingText(x, y, text, isCrit, isGolden) {
+                const el = document.createElement('div');
+                el.className = 'floating-text' + (isCrit ? ' critical' : '') + (isGolden ? ' critical' : '');
+                el.textContent = text;
+                el.style.left = x + 'px'; el.style.top = y + 'px';
+                el.style.position = 'fixed'; el.style.zIndex = '100';
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 1000);
+            }
+            function createParticles(cx, cy, earthCx, earthCy, boosted) {
+                const count = boosted ? 20 : 8;
+                const colors = boosted ? ['#ffd700','#ffaa00','#ff8800','#fff','#ffcc00','#ff6600'] : ['#4da6ff','#88ccff','#fff','#aaddff','#66bbff'];
+                for (let i=0; i<count; i++) {
+                    const p = document.createElement('div'); p.className = 'particle';
+                    const size = Math.random()*6+2;
+                    const angle = Math.random()*Math.PI*2;
+                    const dist = Math.random()*60+20;
+                    p.style.cssText = `width:${size}px; height:${size}px; left:${cx}px; top:${cy}px; position:fixed; z-index:50; background:${colors[Math.floor(Math.random()*colors.length)]}; --dx:${Math.cos(angle)*dist}px; --dy:${Math.sin(angle)*dist}px; box-shadow:0 0 ${size*2}px ${colors[0]};`;
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 700);
+                }
+            }
+
+            function spawnGoldenEarth() {
+                if (game.goldenEarthActive) return;
+                game.goldenEarthActive = true;
+                const duration = game.specialUpgrades['goldenLuck'] ? Math.random()*4+5 : Math.random()*3+4;
+                game.goldenEarthEndTime = Date.now() + duration*1000;
+                earthWrapper.classList.add('golden');
+                const timer = document.createElement('div'); timer.className = 'golden-timer'; timer.id = 'goldenTimer';
+                timer.textContent = '⭐ GOLDEN EARTH! ' + getGoldenClickMultiplier() + 'x';
+                earthWrapper.appendChild(timer);
+                updateGoldenTimer();
+            }
+            function updateGoldenTimer() {
+                if (!game.goldenEarthActive) return;
+                const remaining = Math.max(0, Math.ceil((game.goldenEarthEndTime - Date.now())/1000));
+                const timer = document.getElementById('goldenTimer');
+                if (timer && remaining > 0) { timer.textContent = '⭐ GOLDEN EARTH! ' + getGoldenClickMultiplier() + 'x | ' + remaining + 's'; setTimeout(updateGoldenTimer, 500); }
+                else if (remaining <= 0) endGoldenEarth();
+            }
+            function endGoldenEarth() {
+                game.goldenEarthActive = false; earthWrapper.classList.remove('golden');
+                const timer = document.getElementById('goldenTimer'); if (timer) timer.remove();
+            }
+            function checkGoldenEarthSpawn() {
+                if (game.goldenEarthActive) { if (Date.now() >= game.goldenEarthEndTime) endGoldenEarth(); return; }
+                const baseChance = game.specialUpgrades['goldenLuck'] ? 0.015 : 0.007;
+                if (Math.random() < baseChance) spawnGoldenEarth();
+            }
+
+            function saveGame() {
+                game.lastSaveTime = Date.now();
+                const saveData = { energy:game.energy, totalEnergyEver:game.totalEnergyEver, totalClicks:game.totalClicks, generators:game.generators, clickUpgrades:game.clickUpgrades, multipliers:game.multipliers, specialUpgrades:game.specialUpgrades, critChance:game.critChance, critMultiplier:game.critMultiplier, lastSaveTime:game.lastSaveTime, totalEarnedOffline:game.totalEarnedOffline };
+                try { localStorage.setItem('earthClickerSave_v2', JSON.stringify(saveData)); showToast('💾 Game saved successfully!'); } catch(e) { showToast('⚠️ Failed to save.'); }
+            }
+            function loadGame(silent = false) {
+                try {
+                    const raw = localStorage.getItem('earthClickerSave_v2');
+                    if (!raw) { if(!silent) showToast('📂 No save found. Starting fresh!'); return false; }
+                    const saveData = JSON.parse(raw);
+                    game.energy = saveData.energy||0; game.totalEnergyEver = saveData.totalEnergyEver||0; game.totalClicks = saveData.totalClicks||0;
+                    game.generators = saveData.generators||{}; game.clickUpgrades = saveData.clickUpgrades||{}; game.multipliers = saveData.multipliers||{};
+                    game.specialUpgrades = saveData.specialUpgrades||{}; game.critChance = saveData.critChance||0; game.critMultiplier = saveData.critMultiplier||5;
+                    game.lastSaveTime = saveData.lastSaveTime||Date.now(); game.totalEarnedOffline = saveData.totalEarnedOffline||0;
+                    generatorData.forEach(g => { if(!(g.id in game.generators)) game.generators[g.id]=0; });
+                    clickUpgradeData.forEach(c => { if(!(c.id in game.clickUpgrades)) game.clickUpgrades[c.id]=0; });
+                    multiplierData.forEach(m => { if(!(m.id in game.multipliers)) game.multipliers[m.id]=false; });
+                    specialData.forEach(s => { if(!(s.id in game.specialUpgrades)) game.specialUpgrades[s.id]=false; });
+                    const now = Date.now(); const elapsed = (now - game.lastSaveTime)/1000;
+                    if(elapsed>30 && getEnergyPerSecond()>0){
+                        const capped = Math.min(elapsed, 86400);
+                        const offlineEarnings = getEnergyPerSecond()*capped*0.5;
+                        game.energy += offlineEarnings; game.totalEarnedOffline += offlineEarnings;
+                        if(!silent && offlineEarnings>1) showToast(`🌙 Welcome back! You earned ⚡ ${formatNumber(offlineEarnings)} while away.`);
+                    }
+                    game.lastSaveTime = now;
+                    updateAllDisplays(); renderShop();
+                    if(!silent) showToast('📂 Game loaded!');
+                    return true;
+                } catch(e) { if(!silent) showToast('⚠️ Failed to load save data.'); return false; }
+            }
+            function resetGame() {
+                if(confirm('⚠️ Reset ALL progress? This cannot be undone!')) {
+                    game.energy=0; game.totalEnergyEver=0; game.totalClicks=0; game.critChance=0; game.critMultiplier=5; game.goldenEarthActive=false; game.totalEarnedOffline=0;
+                    generatorData.forEach(g=>game.generators[g.id]=0); clickUpgradeData.forEach(c=>game.clickUpgrades[c.id]=0);
+                    multiplierData.forEach(m=>game.multipliers[m.id]=false); specialData.forEach(s=>game.specialUpgrades[s.id]=false);
+                    game.lastSaveTime=Date.now(); endGoldenEarth(); localStorage.removeItem('earthClickerSave_v2');
+                    updateAllDisplays(); renderShop(); showToast('🗑️ Game reset. Fresh start!');
+                }
+            }
+            function showToast(message) {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message;
+                container.appendChild(toast); setTimeout(()=>toast.remove(),3000);
+            }
+
+            function gameLoop() {
+                const eps = getEnergyPerSecond();
+                if(eps>0){ game.energy += eps/10; game.totalEnergyEver += eps/10; }
+                updateAllDisplays(); renderShop();
+                if(Math.floor(Date.now()/10000) !== Math.floor((Date.now()-100)/10000)) checkGoldenEarthSpawn();
+                if(game.goldenEarthActive && Date.now() >= game.goldenEarthEndTime) endGoldenEarth();
+            }
+            function autoSave() {
+                const saveData = { energy:game.energy, totalEnergyEver:game.totalEnergyEver, totalClicks:game.totalClicks, generators:game.generators, clickUpgrades:game.clickUpgrades, multipliers:game.multipliers, specialUpgrades:game.specialUpgrades, critChance:game.critChance, critMultiplier:game.critMultiplier, lastSaveTime:Date.now(), totalEarnedOffline:game.totalEarnedOffline };
+                try { localStorage.setItem('earthClickerSave_v2', JSON.stringify(saveData)); game.lastSaveTime = Date.now(); } catch(e){}
+            }
+
+            window.switchTab = switchTab;
+            window.saveGame = saveGame;
+            window.loadGame = function(){ loadGame(false); };
+            window.resetGame = resetGame;
+
+            function init() {
+                const loaded = loadGame(true);
+                if(!loaded) { game.energy=0; game.lastSaveTime=Date.now(); }
+                updateAllDisplays(); renderShop();
+                setInterval(gameLoop, 100);
+                setInterval(autoSave, 30000);
+                setTimeout(autoSave, 5000);
+            }
+            init();
+        })();
+    </script>
+</body>
+</html>
